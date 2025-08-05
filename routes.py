@@ -4,7 +4,8 @@ import random
 import json
 from flask import Blueprint, jsonify, request
 from flask_mail import Mail, Message
-from flask_bcrypt import Bcrypt
+# from flask_bcrypt import Bcrypt
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask import render_template
 from models import Host, Customer, Events, Email, Events_order, Comments, db
 import jwt
@@ -15,7 +16,7 @@ from flask import current_app
 
 bp = Blueprint('routes', __name__)
 mail = Mail()
-bcrypt = Bcrypt()
+# bcrypt = Bcrypt()
 
 # Decorator to ensure that a valid token is provided in the request
 def token_required(f):
@@ -674,7 +675,7 @@ def host_register():
     if existing_cust:
         return jsonify({'message': 'Customer email already exists!'}), 401
     # hash the password
-    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    hashed_password = generate_password_hash(data['password'])
     new_user = Host(companyName=data['companyName'], email=data['email'], password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
@@ -693,7 +694,7 @@ def cust_register():
     if existing_host:
         return jsonify({'message': 'Host email already exists!'}), 401
     # hash the password
-    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    hashed_password = generate_password_hash(data['password'])
     new_user = Customer(name=data['Name'], email=data['email'], password=hashed_password, cvc=data['cardCVC'],
                         duedate=data['cardExpirationDate'], wallet=0, cardNumber=data['cardNumber'], order={})
     db.session.add(new_user)
@@ -755,7 +756,7 @@ def login():
                 return jsonify({'message': 'Please login customer!'}), 402
         else:
             # check if password is correct
-            if not bcrypt.check_password_hash(host.password, password):
+            if not check_password_hash(host.password, password):
                 return jsonify({'message': 'Invalid email or password'}), 403
             token = jwt.encode({'id': host.id, 'exp': datetime.now(timezone.utc) + timedelta(minutes=30)},
                                current_app.config['SECRET_KEY'])
@@ -771,7 +772,7 @@ def login():
                 return jsonify({'message': 'Please login host!'}), 405
         else:
             # check if password is correct
-            if not bcrypt.check_password_hash(customer.password, password):
+            if not check_password_hash(customer.password, password):
                 return jsonify({'message': 'Invalid email or password'}), 406
             token = jwt.encode({'id': customer.id, 'exp': datetime.now(timezone.utc) + timedelta(minutes=30)},
                                current_app.config['SECRET_KEY'])
@@ -908,7 +909,7 @@ def reset_password():
     else:
         return jsonify({'message': 'Invalid role.'}), 404
     
-    user.password = bcrypt.generate_password_hash(password).decode('utf-8')
+    user.password = generate_password_hash(password)
     db.session.commit()
     response = {'message': 'User password set successfully'}
     return jsonify(response), 200

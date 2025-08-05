@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, flash
-from flask_bcrypt import Bcrypt
+# from flask_bcrypt import Bcrypt
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 from flask_mail import Mail, Message
 import logging
@@ -18,7 +19,7 @@ db.init_app(app)
 mail = Mail(app)
 
 # Initialize the password hashing with the app
-bcrypt = Bcrypt(app)
+# bcrypt = Bcrypt(app)
 
 # Enable Cross-Origin Resource Sharing for the app
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -36,7 +37,6 @@ if __name__ == '__main__':
         # Create a default user
         # create_default_user()
     # Initialize the email
-    mail.init_app(app)
     # Run the app with the specified host and port with debug mode on
     app.run(host='127.0.0.1', port=5005, debug=True)
     # Set the logging level for the app

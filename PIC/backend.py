@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
+# from flask_bcrypt import Bcrypt
+from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
 from functools import wraps
@@ -27,7 +28,6 @@ pic_folder = os.path.join(current_directory, 'PIC')
 #app.config['PIC_FLODER'] = pic_folder
 
 db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
 
 class Host(db.Model):
     __tablename__ = "host"
@@ -200,10 +200,10 @@ def register():
         return jsonify({'message': 'Customer email already exists!'}), 400
     print(data)
     if 'companyName' in data:
-        hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+        hashed_password = generate_password_hash(data['password'])
         new_user = Host(companyName=data['companyName'], email=data['email'], password=hashed_password)
     else:
-        hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+        hashed_password = generate_password_hash(data['password'])
         new_user = Customer(name=data['Name'], email=data['email'], password=hashed_password, cvc=data['cardCVC'], duedate=data['cardExpirationDate'])
     db.session.add(new_user)
     db.session.commit()
@@ -225,14 +225,14 @@ def login():
         if not customer:
             print('message: User not found')
             return jsonify({'message': 'User not found'}), 401
-        if not bcrypt.check_password_hash(customer.password, password):
+        if not check_password_hash(customer.password, password):
             print('message: Invalid email or password')
             return jsonify({'message': 'Invalid email or password'}), 401
 
         token = jwt.encode({'id': customer.id, 'exp': datetime.now(timezone.utc) + timedelta(minutes=30)},
                            app.config['SECRET_KEY'])
         return jsonify({'token': token})
-    if not bcrypt.check_password_hash(host.password, password):
+    if not check_password_hash(host.password, password):
         print('message: Invalid email or password')
         return jsonify({'message': 'Invalid email or password'}), 401
     #print("package token")
