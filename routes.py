@@ -130,71 +130,115 @@ def get_events():
     return jsonify(event_list), 201
 
 
+# @bp.route('/events/search', methods=['GET'])
+# def search_events():
+#     # Get the event description from the request
+#     event_description = request.args.get('description', '')
+#     # Get the keyword from the request
+#     keyword = request.args.get('keyWord', '')
+#     # Get the event type from the request
+#     event_type = request.args.get('eventType', '')
+#     # Create a query object for the Events class
+#     query = Events.query
+
+#     events = Events.query.all()
+#     # Search for events based on the description, keyword, and event type
+#     if event_description:
+#         query = query.filter(Events.description.ilike(f'%{event_description}%'))
+#     if keyword:
+#         query = query.filter(Events.keyword.ilike(f'%{keyword}%'))
+#     if event_type:
+#         query = query.filter(Events.event_type.ilike(f'%{event_type}%'))
+
+#     events = query.all()
+#     event_list = []
+
+#     # Search for events based on the description, keyword, and event type
+#     for event in events:
+#         flag_print = 0
+#         if event_type == 'all types':
+#             if keyword.lower() == '':
+#                 if event_description.lower() in event.description.lower():
+#                     flag_print = 1
+#             elif event_description.lower() == '':
+#                 if keyword.lower() in event.title.lower():
+#                     flag_print = 1
+#             elif keyword.lower() == '' and event_description.lower() == '':
+#                 flag_print = 1
+#             else:
+#                 if keyword.lower() in event.title.lower() and event_description.lower() in event.description.lower():
+#                     flag_print = 1
+#         else:
+#             if event_description.lower() == '' and event_type.lower() == '' and keyword.lower() == '':
+#                 return jsonify([]), 200
+#             elif keyword.lower() == '':
+#                 if event_description.lower() in event.description.lower() and event_type.lower() in event.type.lower():
+#                     flag_print = 1
+#             elif event_description.lower() == '':
+#                 if keyword.lower() in event.title.lower() and event_type.lower() in event.type.lower():
+#                     flag_print = 1
+#             elif event_type.lower() == '':
+#                 if keyword.lower() in event.title.lower() and event_description.lower() in event.description.lower():
+#                     flag_print = 1
+#             elif keyword.lower() == '' and event_description.lower() == '':
+#                 if event_type.lower() in event.type.lower():
+#                     flag_print = 1
+#             elif keyword.lower() == '' and event_type.lower() == '':
+#                 if event_description.lower() in event.description.lower():
+#                     flag_print = 1
+#             elif event_description.lower() == '' and event_type.lower() == '':
+#                 if keyword.lower() in event.title.lower():
+#                     flag_print = 1
+#             else:
+#                 if keyword.lower() in event.title.lower() and event_description.lower() in event.description.lower() and event_type.lower() in event.type.lower():
+#                     flag_print = 1
+                    
+#         if flag_print == 1:
+#             # Create a dictionary called event_data containing the event information
+#             event_data = {
+#                 'id': event.id,
+#                 'title': event.title,
+#                 'address': event.address,
+#                 'price': event.price,
+#                 'thumbnail': event.thumbnail,
+#                 'organizerName': event.organizername,
+#                 'eventType': event.type,
+#                 'seatingCapacity': event.seats,
+#                 'duration': event.duration,
+#                 'startDate': event.from_time,
+#                 'endDate': event.to_time,
+#                 'description': event.description,
+#                 'youtubeUrl': event.URL
+#             }
+#             event_list.append(event_data)
+#     return jsonify(event_list), 200
+
 @bp.route('/events/search', methods=['GET'])
 def search_events():
-    # Get the event description from the request
-    event_description = request.args.get('description', '')
-    # Get the keyword from the request
-    keyword = request.args.get('keyWord', '')
-    # Get the event type from the request
-    event_type = request.args.get('eventType', '')
-    # Create a query object for the Events class
+    # Get search parameters from the query string
+    event_description = request.args.get('description', '').strip().lower()
+    keyword = request.args.get('keyWord', '').strip().lower()
+    event_type = request.args.get('eventType', '').strip().lower()
+
+    # Start a query
     query = Events.query
 
-    events = Events.query.all()
-    # Search for events based on the description, keyword, and event type
+    # Filter by event type (unless it’s 'all types' or empty)
+    if event_type and event_type != 'all types':
+        query = query.filter(Events.type.ilike(f'%{event_type}%'))
+
+    # Filter by keyword in title
+    if keyword:
+        query = query.filter(Events.title.ilike(f'%{keyword}%'))
+
+    # Filter by description
     if event_description:
         query = query.filter(Events.description.ilike(f'%{event_description}%'))
-    if keyword:
-        query = query.filter(Events.keyword.ilike(f'%{keyword}%'))
-    if event_type:
-        query = query.filter(Events.event_type.ilike(f'%{event_type}%'))
 
-    events = query.all()
-    event_list = []
-
-    # Search for events based on the description, keyword, and event type
-    for event in events:
-        flag_print = 0
-        if event_type == 'all types':
-            if keyword.lower() == '':
-                if event_description.lower() in event.description.lower():
-                    flag_print = 1
-            elif event_description.lower() == '':
-                if keyword.lower() in event.title.lower():
-                    flag_print = 1
-            elif keyword.lower() == '' and event_description.lower() == '':
-                flag_print = 1
-            else:
-                if keyword.lower() in event.title.lower() and event_description.lower() in event.description.lower():
-                    flag_print = 1
-        else:
-            if event_description.lower() == '' and event_type.lower() == '' and keyword.lower() == '':
-                return jsonify([]), 200
-            elif keyword.lower() == '':
-                if event_description.lower() in event.description.lower() and event_type.lower() in event.type.lower():
-                    flag_print = 1
-            elif event_description.lower() == '':
-                if keyword.lower() in event.title.lower() and event_type.lower() in event.type.lower():
-                    flag_print = 1
-            elif event_type.lower() == '':
-                if keyword.lower() in event.title.lower() and event_description.lower() in event.description.lower():
-                    flag_print = 1
-            elif keyword.lower() == '' and event_description.lower() == '':
-                if event_type.lower() in event.type.lower():
-                    flag_print = 1
-            elif keyword.lower() == '' and event_type.lower() == '':
-                if event_description.lower() in event.description.lower():
-                    flag_print = 1
-            elif event_description.lower() == '' and event_type.lower() == '':
-                if keyword.lower() in event.title.lower():
-                    flag_print = 1
-            else:
-                if keyword.lower() in event.title.lower() and event_description.lower() in event.description.lower() and event_type.lower() in event.type.lower():
-                    flag_print = 1
-                    
-        if flag_print == 1:
-            # Create a dictionary called event_data containing the event information
+    try:
+        events = query.all()
+        results = []
+        for event in events:
             event_data = {
                 'id': event.id,
                 'title': event.title,
@@ -202,7 +246,7 @@ def search_events():
                 'price': event.price,
                 'thumbnail': event.thumbnail,
                 'organizerName': event.organizername,
-                'eventType': event.type,
+                'eventType': event.type,  # 👈 使用 event.type 因为你的字段叫 type
                 'seatingCapacity': event.seats,
                 'duration': event.duration,
                 'startDate': event.from_time,
@@ -210,8 +254,13 @@ def search_events():
                 'description': event.description,
                 'youtubeUrl': event.URL
             }
-            event_list.append(event_data)
-    return jsonify(event_list), 200
+            results.append(event_data)
+
+        return jsonify(results), 200
+
+    except Exception as e:
+        print("Error during event search:", e)
+        return jsonify({"message": "Internal server error"}), 500
 
 # return events titles
 @bp.route('/events/title', methods=['GET'])

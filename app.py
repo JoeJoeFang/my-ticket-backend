@@ -22,7 +22,10 @@ mail = Mail(app)
 # bcrypt = Bcrypt(app)
 
 # Enable Cross-Origin Resource Sharing for the app
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": [
+    "http://localhost:3000",   # 本地前端开发
+    "https://joejoefang.github.io"  # 部署后的前端
+]}}, supports_credentials=True)
 
 # Register the routes blueprint
 app.register_blueprint(routes_blueprint)
